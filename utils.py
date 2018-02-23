@@ -1,7 +1,7 @@
 from math import sqrt
 
-import pylab
 import numpy as np
+import pylab
 from scipy import spatial
 
 DATASET_PATH = 'dataset/twitter_1000000.txt'
@@ -10,6 +10,7 @@ DATASET_PATH = 'dataset/twitter_1000000.txt'
 def read_data(limit):
     """
     Read all the points into a numpy array, limited to the first `limit` points.
+    If a limit of 0 provided, all points are returned.
     """
     data = np.fromfile(DATASET_PATH, sep=' ')
     data = np.reshape(data, (1000000, 3))
@@ -58,8 +59,8 @@ def min_dist(point_list):
     p1, p2 = point_list[edges[idx]]
 
     print('The closest points are:')
-    print('Index: {}, coordinates: ({})'.format(idx1, ', '.join(map(str, p1))))
-    print('Index: {}, coordinates: ({})'.format(idx2, ', '.join(map(str, p2))))
+    print('Index: {}, coordinates: {}'.format(idx1, tuple(p1)))
+    print('Index: {}, coordinates: {}'.format(idx2, tuple(p2)))
 
     return np.min(dists)
 
@@ -87,8 +88,8 @@ def max_dist(point_list):
     p1, p2 = vertices[idx]
 
     print('The furthest points are:')
-    print('Index: {}, coordinates: ({})'.format(idx1, ', '.join(map(str, p1))))
-    print('Index: {}, coordinates: ({})'.format(idx2, ', '.join(map(str, p2))))
+    print('Index: {}, coordinates: {}'.format(idx1, tuple(p1)))
+    print('Index: {}, coordinates: {}'.format(idx2, tuple(p2)))
 
     return np.max(dists)
 
