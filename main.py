@@ -1,3 +1,4 @@
+import argparse
 import json
 import multiprocessing as mp
 import os
@@ -8,28 +9,24 @@ from pympler.asizeof import asizeof
 from data_structure import FullyDynClus
 from utils import data_stream
 
-MODE = 'SMALL'
-CONFIG = {
-    'FULL': (1000000, 60000),
-    'SMALL': (1000, 60)
-}
-LIMIT, WINDOW = CONFIG[MODE]
 
-
-def fully_dynamic(eps):
+def fully_dynamic(eps, args):
     """
     Run the fully dynamic clustering algorithm with the given parameter eps.
     """
-    print('Running the algorithm with ε = {} in Process #{}'.format(
+    print('Running the algorithm with eps = {} in Process #{}'.format(
         eps, os.getpid()
     ))
+
+    limit = args.limit
+    window = args.window
 
     space = 0  # keep track of the space used by the data structures
     start = time()
 
-    fdc = FullyDynClus(eps, 20, WINDOW)
+    fdc = FullyDynClus(eps, 20, window)
 
-    for point in data_stream(LIMIT):
+    for point in data_stream(limit):
         # There are some duplicate points in the dataset, for example,
         # the 71st and 86th points
         if point in fdc.points:
@@ -38,22 +35,44 @@ def fully_dynamic(eps):
         fdc.insert(point)
 
         # Delete the least recent point in the sliding window
-        if len(fdc.points) >= WINDOW + 1:
-            fdc.delete(fdc.points[-WINDOW - 1])
+        if len(fdc.points) >= window + 1:
+            fdc.delete(fdc.points[-window - 1])
 
         space = max(space, asizeof(fdc))
 
-        # if len(fdc.points) % 100 == 0:
-        #     print(len(fdc.points) // 100, int(time() - start))
-
-    print('Finish running the algorithm with ε = {}'.format(eps))
+    print('Finish running the algorithm with eps = {}'.format(eps))
 
     return {str(eps): {'run_time': round(time() - start, 3),
                        'space': space,
                        'op_count': fdc.op_count}}
 
 
+def check_args(parser, args):
+    if args.limit < args.window:
+        parser.error('The number of points needs to be at least the window size.')
+
+    return args
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Fully Dynamic k-center Clustering algorithm.')
+    parser.add_argument('-c', '--cpu', type=int, default=os.cpu_count(),
+                        help="The number of parallel processes to run the algorithm. "
+                             "Default: os.cpu_count() = %(default)s.")
+    parser.add_argument('-l', '--limit', type=int, default=1000,
+                        help="The total number of points to be inserted in the algorithm. "
+                             "Default: %(default)s.")
+    parser.add_argument('-w', '--window', type=int, default=60,
+                        help="The size of the sliding window. Default: %(default)s.")
+
+    args = parser.parse_args()
+    args = check_args(parser, args)
+
+    return args
+
+
 def main():
+    args = parse_args()
     results = {}
 
     def collect_result(result):
@@ -63,12 +82,12 @@ def main():
         results.update(result)
 
     # Create the pool of processes
-    pool = mp.Pool()
+    pool = mp.Pool(args.cpu)
 
     for eps in [i / 10 for i in range(1, 11)]:
-        pool.apply_async(fully_dynamic, args=(eps,), callback=collect_result)
+        pool.apply_async(fully_dynamic, args=(eps, args), callback=collect_result)
 
-    # Starting running the algorithm
+    # Start running the algorithm
     pool.close()
     pool.join()
 
