@@ -7,6 +7,19 @@ from matplotlib import pyplot as plt
 from utils import euclidean_distance, get_colors
 
 
+def count_operation(func):
+    """A decorator to count the number of update operations."""
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        self = args[0]
+        self.op_count += 1
+
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
 class FullyDynClus:
     def __init__(self, eps, n_clusters, window, distance_func=euclidean_distance):
         self.eps = eps              # epsilon in the approximation ratio of (2 + ε)
@@ -19,12 +32,15 @@ class FullyDynClus:
         self.points = []            # the list of points ever inserted
         self.dmin = float('inf')    # the minimum distance between any two points in the window
         self.dmax = 0               # the maximum distance
+        self.op_count = 0           # the counter of update operations
 
+    @count_operation
     def delete(self, x):
         """Delete the point x from the data structures."""
         for struct in self.structs:
             struct.delete(x)
 
+    @count_operation
     def insert(self, x):
         """
         Insert a point x int the data structures. We will first find the new dmin, dmax,
@@ -119,23 +135,6 @@ class FullyDynClus:
 
         return 0
 
-    @property
-    def op_count(self):
-        return sum(struct.op_count for struct in self.structs)
-
-
-def count_operation(func):
-    """A decorator to count the number of update operations."""
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        self = args[0]
-        self.op_count += 1
-
-        return func(*args, **kwargs)
-
-    return wrapper
-
 
 class L:
     def __init__(self, n_clusters=8, beta=16, distance_func=euclidean_distance):
@@ -148,7 +147,6 @@ class L:
         self.collection = list()    # the collection of disjoint clusters
         self.unclustered_points = set()         # the set of unclustered points
         self.colors = get_colors(n_clusters)    # the colors used to visualize the clusters
-        self.op_count = 0           # the counter of update operations
 
     def __repr__(self):
         return '<L(β={})>'.format(self.beta)
@@ -189,7 +187,6 @@ class L:
             self.centers.append(center)
             self.collection.append(kth_cluster)
 
-    @count_operation
     def delete(self, x):
         # Find the id of the cluster containing x, if any
         cluster_id = self.labels.pop(x, None)
@@ -213,7 +210,6 @@ class L:
 
         self.random_recluster(x_hat, k - cluster_id)
 
-    @count_operation
     def insert(self, x):
         for center in self.centers:
             if self.d(center, x) <= 2 * self.beta:
