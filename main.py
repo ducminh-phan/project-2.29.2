@@ -23,6 +23,7 @@ def fully_dynamic(eps, args):
 
     space = 0  # keep track of the space used by the data structures
     start = time()
+    beta = 0
 
     fdc = FullyDynClus(eps, 20, window)
 
@@ -38,13 +39,15 @@ def fully_dynamic(eps, args):
         if len(fdc.points) >= window + 1:
             fdc.delete(fdc.points[-window - 1])
 
+        beta = max(beta, fdc.get_result())
         space = max(space, asizeof(fdc))
 
     print('Finish running the algorithm with eps = {}'.format(eps))
 
     return {str(eps): {'run_time': round(time() - start, 3),
                        'space': space,
-                       'op_count': fdc.op_count}}
+                       'op_count': fdc.op_count,
+                       'beta': beta}}
 
 
 def check_args(parser, args):

@@ -2,7 +2,6 @@ import random
 from functools import wraps
 from math import log
 
-import pylab
 from matplotlib import pyplot as plt
 
 from utils import euclidean_distance, get_colors
@@ -33,7 +32,6 @@ class FullyDynClus:
         into each data structure. We need extra care for the first points ever inserted.
         """
         new_dmin, new_dmax = self.find_new_dmin_dmax(x)
-        # [self.structs[i].visualize(i) for i in range(len(self.gamma))]
 
         if len(self.points) >= 2:
             self.update(new_dmin, new_dmax)
@@ -111,9 +109,15 @@ class FullyDynClus:
         return new_dmin, new_dmax
 
     def get_result(self):
+        """
+        Find the (2 + ε)-approximation of the radius. We need to find the smallest β
+        such that all points are partitioned, i.e., there is no unclustered point.
+        """
         for struct in self.structs:
             if not struct.unclustered_points:
-                return struct
+                return struct.beta
+
+        return 0
 
     @property
     def op_count(self):
@@ -150,7 +154,6 @@ class L:
         return '<L(β={})>'.format(self.beta)
 
     def fit(self, X):
-        # self.random_recluster(X, self.n_clusters)
         for point in X:
             self.insert(point)
         return self
@@ -260,6 +263,6 @@ class L:
             plt.scatter(*self.centers[i], marker='x', c=self.colors[i])
 
         file_name = 'figs/{}.png'.format(str(num).zfill(5))
-        pylab.savefig(file_name)
+        plt.savefig(file_name)
 
         plt.close()
