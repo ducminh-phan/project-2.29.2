@@ -152,8 +152,15 @@ class L:
         return '<L(β={})>'.format(self.beta)
 
     def fit(self, X):
+        """
+        Initialize the data structure using the points in the current sliding window
+        when it is computed for each missing β in Γ. We simply insert the points
+        in the sliding window one by one.
+        """
         for point in X:
             self.insert(point)
+
+        # Return the instance itself to that it can be added to the list of L_β
         return self
 
     def _get_closest_points(self, point_list, center):
@@ -164,15 +171,19 @@ class L:
                 for point in point_list
                 if self.d(point, center) <= 2 * self.beta}
 
-    def random_recluster(self, X, n_clusters):
+    def random_recluster(self, X, k_clusters):
+        """
+        Produce <= k centers (picked randomly) with pairwise distance > 2β, modify
+        the attributes directly instead of returning S, C, U.
+        """
         self.unclustered_points = set(X)
-        k = -1
+        k = -1  # initialize k to -1 as indices start from 0
 
         # Remove the label associated to the points to be reclustered
         for data_point in X:
             self.labels.pop(data_point, None)
 
-        while self.unclustered_points and k < n_clusters - 1:
+        while self.unclustered_points and k < k_clusters - 1:
             k += 1
             center = random.choice(tuple(self.unclustered_points))
             kth_cluster = self._get_closest_points(
@@ -225,7 +236,7 @@ class L:
         # Now d(x, c_i) > 2β for all centers c_i
 
         if len(self.centers) < self.n_clusters:
-            # if we can still add another cluster:
+            # If we can still add another cluster:
             # make x the center of a new cluster
 
             self.labels[x] = len(self.centers)
