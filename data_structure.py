@@ -253,7 +253,7 @@ class L:
 
         plt.figure(figsize=(12, 9))
         plt.xlim(-180, 180)
-        plt.ylim(-180, 180)
+        plt.ylim(-90, 90)
 
         for i in range(k):
             plt.scatter(*zip(*self.collection[i]), s=2, c=self.colors[i])

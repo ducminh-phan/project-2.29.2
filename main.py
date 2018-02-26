@@ -94,7 +94,7 @@ def main():
     pool.close()
     pool.join()
 
-    with open('results.json', 'w') as f:
+    with open('results_{}_{}.json'.format(args.limit, args.window), 'w') as f:
         json.dump(results, f)
 
 
