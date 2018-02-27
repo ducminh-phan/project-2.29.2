@@ -59,7 +59,7 @@ def check_args(parser, args):
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Fully Dynamic k-center Clustering algorithm.')
-    parser.add_argument('-c', '--cpu', type=int, default=os.cpu_count(),
+    parser.add_argument('-p', '--proc', type=int, default=os.cpu_count(),
                         help="The number of parallel processes to run the algorithm. "
                              "Default: os.cpu_count() = %(default)s.")
     parser.add_argument('-l', '--limit', type=int, default=1000,
@@ -85,7 +85,7 @@ def main():
         results.update(result)
 
     # Create the pool of processes
-    pool = mp.Pool(args.cpu)
+    pool = mp.Pool(args.proc)
 
     for eps in [i / 10 for i in range(1, 11)]:
         pool.apply_async(fully_dynamic, args=(eps, args), callback=collect_result)
