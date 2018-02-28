@@ -5,3 +5,6 @@ __pycache__
 *.pyc
 *.pdf
 *.zip
+
+# notebook checkpoints
+.ipynb_checkpoints
